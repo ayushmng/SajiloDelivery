@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "jsx": "react",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["app/*"],
+      "@/components/*": ["app/components/*"],
+      "@/constants/*": ["app/constants/*"],
+      "@/context/*": ["app/context/*"],
+      "@/types/*": ["app/constants/types/*"],
+      "@/utils/*": ["app/utils/*"]
+    },
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "extends": "expo/tsconfig.base"
+}
