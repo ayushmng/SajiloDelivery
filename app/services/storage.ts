@@ -21,3 +21,29 @@ export const saveRequest = async (
     console.error("Error saving to AsyncStorage:", error);
   }
 };
+
+export const getSavedRequests = async (onlyUnsynced = true) => {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return onlyUnsynced ? parsed.filter((r) => !r.synced) : parsed;
+  } catch (error) {
+    console.error("Failed to fetch saved requests:", error);
+    return [];
+  }
+};
+
+export const markRequestAsSynced = async (id: string) => {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    const updated = parsed.map((r) =>
+      r.id === id ? { ...r, synced: true } : r
+    );
+
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.error("Failed to update sync status:", error);
+  }
+};

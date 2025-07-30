@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   StyleSheet,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  BackHandler,
 } from "react-native";
 import { Button } from "@/components/button";
 import {
@@ -12,6 +13,7 @@ import {
 } from "react-native-safe-area-context";
 import { TextField } from "@/components/textInput";
 import {
+  addressEmptyMessage,
   deliveryNote,
   formHeading,
   fullNamePlaceHolder,
@@ -19,7 +21,7 @@ import {
 } from "@/utils/string";
 import { useAppStore } from "@/stores/appStore";
 import { UneditableTextField } from "@/components/textInput/UneditableTextField";
-import { navigate } from "@/navigation/rootNavigationRef";
+import { goBack, navigate } from "@/navigation/rootNavigationRef";
 import NetInfo from "@react-native-community/netinfo";
 import { saveRequest } from "@/services/storage";
 import { submitRequestToApi } from "@/services/api";
@@ -27,6 +29,18 @@ import Text, { fontFamily } from "@/components/text";
 import { size } from "@/constants/fonts";
 import { BackButton } from "@/components/button/backButton";
 import Toast from "react-native-toast-message";
+import { useFocusEffect } from "@react-navigation/native";
+
+export const useBackHandler = (onBackPress: () => boolean) => {
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress
+    );
+
+    return () => backHandler.remove();
+  }, [onBackPress]);
+};
 
 export default function Order() {
   const insets = useSafeAreaInsets();
@@ -52,13 +66,12 @@ export default function Order() {
   });
 
   const [isLoading, setLoading] = useState(false);
-  const { deliveryRequest, updateRequest } = useAppStore();
+  const { deliveryRequest, updateRequest, clearData } = useAppStore();
 
   const isValid = (): boolean => {
     const { name, pickupAddress, dropOffAddress, phone } = deliveryRequest;
 
     const isEmpty = (val: string) => val.trim() === "";
-
     const isPhoneValid = (phone: string) =>
       phone.length === 10 &&
       (phone.startsWith("98") ||
@@ -91,6 +104,8 @@ export default function Order() {
         const res = await submitRequestToApi(requestPayload);
         if (res.status) {
           setLoading(false);
+          clearData();
+          goBack();
           Toast.show({
             type: "success",
             text1: "Success",
@@ -100,6 +115,8 @@ export default function Order() {
       } catch (err) {
         setLoading(false);
         await saveRequest(requestPayload);
+        clearData();
+        goBack();
         Toast.show({
           type: "error",
           text1: "Network Server Error",
@@ -109,6 +126,8 @@ export default function Order() {
     } else {
       setLoading(false);
       await saveRequest(requestPayload);
+      clearData();
+      goBack();
       Toast.show({
         type: "info",
         text1: "Offline",
@@ -117,6 +136,14 @@ export default function Order() {
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        clearData();
+      };
+    }, [])
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -124,12 +151,17 @@ export default function Order() {
         style={[styles.container, { marginBottom: insets.bottom }]}
       >
         <ScrollView style={styles.container}>
-          <BackButton />
+          <BackButton
+            onPress={() => {
+              clearData();
+              goBack();
+            }}
+          />
           <Text style={styles.headingStyles}>{formHeading}</Text>
           <TextField
             isError
             isFieldMandatory
-            label="Full Name:"
+            label="Receiver's Name:"
             value={deliveryRequest.name}
             onChangeText={(text) => updateRequest({ name: text })}
             placeHolder={fullNamePlaceHolder}
@@ -166,7 +198,7 @@ export default function Order() {
               deliveryRequest.dropOffAddress !== "" &&
               deliveryRequest.pickupAddress === deliveryRequest.dropOffAddress
             }
-            emptyMessage={"Pickup and drop off location can not be same"}
+            emptyMessage={addressEmptyMessage}
             label="Drop Off Address:"
             value={deliveryRequest.dropOffAddress}
             onPress={() => navigate("MapScreen", { pickupAddress: false })}

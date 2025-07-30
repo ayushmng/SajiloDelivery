@@ -7,9 +7,18 @@ import { useFonts } from "@/hooks/useFonts";
 import { ActivityIndicator, View } from "react-native";
 import { Colors } from "@/constants/colors";
 import Toast from "react-native-toast-message";
+import { setupAutoSync } from "@/utils/autoSync";
+import { useEffect } from "react";
 
 export default function App() {
   const fontsLoaded = useFonts();
+
+  useEffect(() => {
+    setTimeout(() => {
+      setupAutoSync();
+    }, 1000);
+  }, []);
+
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -17,6 +26,7 @@ export default function App() {
       </View>
     );
   }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="auto" />
