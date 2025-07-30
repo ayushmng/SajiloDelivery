@@ -1,17 +1,28 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, StyleSheet, FlatList } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, StyleSheet, FlatList, Image } from "react-native";
 import Text, { fontFamily } from "@/components/text";
 import { BackButton } from "@/components/button/backButton";
 import { Colors } from "@/constants/colors";
-import { deliveryHistory } from "@/constants/constants";
 import { size } from "@/constants/fonts";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { STORAGE_KEY, viewHistory } from "@/utils/string";
+import { noData, STORAGE_KEY, viewHistory } from "@/utils/string";
 import { DeliveryRequest } from "@/constants/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { navigationRef } from "@/navigation/rootNavigationRef";
 import { useFocusEffect } from "@react-navigation/native";
 import { splitDateTime } from "@/utils/dateSplitter";
+import { heightPercentageToDP } from "react-native-responsive-screen";
+
+const listEmptyComponent = () => {
+  return (
+    <View style={styles.emptyViewWrapper}>
+      <Image
+        style={styles.imageStyles}
+        source={require("../assets/images/empty_data.png")}
+      />
+      <Text style={styles.emptyText}>{noData}</Text>
+    </View>
+  );
+};
 
 export default function History() {
   const [history, setHistory] = useState<DeliveryRequest[]>([]);
@@ -57,6 +68,7 @@ export default function History() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.container}
+        ListEmptyComponent={listEmptyComponent}
       />
     </SafeAreaView>
   );
@@ -109,4 +121,11 @@ const styles = StyleSheet.create({
     color: Colors.dark1,
     fontSize: size.medium,
   },
+  imageStyles: {
+    height: 320,
+    width: 350,
+    marginTop: heightPercentageToDP(8),
+  },
+  emptyText: { marginTop: 8, fontSize: size.regular },
+  emptyViewWrapper: { flex: 1, alignItems: "center", justifyContent: "center" },
 });

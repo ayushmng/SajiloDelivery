@@ -1,7 +1,6 @@
 import axios from "axios";
 
 interface CityProps {
-  fromHome?: boolean;
   fromPropertyPost?: boolean;
   latitude: string | number;
   longitude: string | number;
@@ -10,7 +9,6 @@ interface CityProps {
 export const getCity = async ({
   latitude,
   longitude,
-  fromHome = false,
   fromPropertyPost = false,
 }: CityProps): Promise<string> => {
   try {
@@ -23,7 +21,7 @@ export const getCity = async ({
       const finalAddress = address?.display_name
         ?.split(",")
         .map((part: any) => part.trim())
-        .slice(0, fromHome ? 2 : 3)
+        .slice(0, 3)
         .join(", ");
       return fromPropertyPost
         ? finalAddress.trim().replace(/,\s*$/, "") +
