@@ -5,6 +5,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Platform,
+  Alert,
+  Linking,
 } from "react-native";
 import MapView, {
   PROVIDER_DEFAULT,
@@ -17,20 +19,71 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { debounce } from "lodash";
 import { Button } from "@/components/button";
 import Text, { fontFamily } from "@/components/text";
-import { pickup, updating, waitingMessage } from "@/utils/string";
+import { noLocationFound, updating, waitingMessage } from "@/utils/string";
 import LottieView from "lottie-react-native";
 import { getCity } from "@/utils/getCity";
-import { AppContext } from "@/context/appContext";
 import { AntDesign } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { goBack } from "@/navigation/rootNavigationRef";
 import { useAppStore } from "@/stores/appStore";
 
 export default function MapScreen({ route }) {
+  const iconSize = 48;
+  const insets = useSafeAreaInsets();
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    animStyles: {
+      width: 48,
+      height: 48,
+    },
+    backButton: {
+      position: "absolute",
+      top: insets.top + 16,
+      left: 16,
+    },
+    navigationWrapper: {
+      height: iconSize,
+      width: iconSize,
+      borderRadius: iconSize / 2,
+      position: "absolute",
+      alignItems: "center",
+      justifyContent: "center",
+      bottom: "22%",
+      right: 16,
+      backgroundColor: "white",
+      borderColor: Colors.dark2,
+    },
+    markerFixed: {
+      left: "44%",
+      top: Platform.OS == "ios" ? "45%" : "43%",
+      position: "absolute",
+    },
+    bottomViewContainer: {
+      backgroundColor: "white",
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      alignItems: "center",
+      borderTopRightRadius: 8,
+      borderTopLeftRadius: 8,
+    },
+    bottomViewWrapper: {
+      height: 32,
+      width: "90%",
+      marginTop: 18,
+      flexDirection: "row",
+      alignItems: "center",
+      borderRadius: 8,
+      paddingHorizontal: 12,
+    },
+  });
+
   const { pickupAddress } = route?.params;
   const mapRef = useRef<MapView>(null);
   const animation = useRef<LottieView>(null);
-  const insets = useSafeAreaInsets();
 
   const [lat, setLat] = useState<number>();
   const [long, setLong] = useState<number>();
@@ -45,8 +98,38 @@ export default function MapScreen({ route }) {
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === "granted");
+      try {
+        const { status, canAskAgain } =
+          await Location.requestForegroundPermissionsAsync();
+
+        if (status === "granted") {
+          setLocationPermission(true);
+        } else {
+          setLocationPermission(false);
+          goBack();
+
+          Alert.alert(
+            "Location Permission Denied",
+            "To use this feature, please enable location permission from settings.",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+              },
+              {
+                text: "Open Settings",
+                onPress: () => {
+                  Linking.openSettings();
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        }
+      } catch (error) {
+        console.log("Permission request failed:", error);
+        setLocationPermission(false);
+      }
     })();
   }, []);
 
@@ -119,11 +202,10 @@ export default function MapScreen({ route }) {
       const cityName = await getCity({
         latitude: lat,
         longitude: long,
-        fromPropertyPost: true,
       });
-      setAddress(cityName || "No Location Found");
+      setAddress(cityName || noLocationFound);
     } catch (error) {
-      setAddress("No Location Found");
+      setAddress(noLocationFound);
     }
     setTimeout(() => {
       setIsAddressUpdating(false);
@@ -173,17 +255,7 @@ export default function MapScreen({ route }) {
         showsMyLocationButton={false}
         style={styles.container}
       />
-      <TouchableOpacity
-        onPress={() => {
-          updateRequest(
-            pickupAddress
-              ? { pickupAddress: address?.slice(0, lastSpaceIndex) }
-              : { dropOffAddress: address?.slice(0, lastSpaceIndex) }
-          );
-          !isAddressUpdating && goBack();
-        }}
-        style={styles.backButton}
-      >
+      <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
         <AntDesign name="arrowleft" size={26} color="black" />
       </TouchableOpacity>
       <View style={styles.markerFixed}>
@@ -216,7 +288,11 @@ export default function MapScreen({ route }) {
               paddingHorizontal: 8,
             }}
           >
-            {isAddressUpdating ? updating : address?.slice(0, lastSpaceIndex)}
+            {isAddressUpdating
+              ? updating
+              : address != noLocationFound
+              ? address?.slice(0, lastSpaceIndex)
+              : address}
           </Text>
         </View>
         <Button
@@ -227,11 +303,12 @@ export default function MapScreen({ route }) {
             marginBottom: insets.bottom + 8 || 28,
           }}
           onPress={() => {
-            updateRequest(
-              pickupAddress
-                ? { pickupAddress: address?.slice(0, lastSpaceIndex) }
-                : { dropOffAddress: address?.slice(0, lastSpaceIndex) }
-            );
+            address != noLocationFound &&
+              updateRequest(
+                pickupAddress
+                  ? { pickupAddress: address?.slice(0, lastSpaceIndex) }
+                  : { dropOffAddress: address?.slice(0, lastSpaceIndex) }
+              );
             !isAddressUpdating && goBack();
           }}
         />
@@ -239,57 +316,3 @@ export default function MapScreen({ route }) {
     </View>
   );
 }
-
-const iconSize = 48;
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  animStyles: {
-    width: 48,
-    height: 48,
-  },
-  backButton: {
-    position: "absolute",
-    top: Platform.OS == "ios" ? 62 : 32,
-    left: 16,
-  },
-  navigationWrapper: {
-    height: iconSize,
-    width: iconSize,
-    borderRadius: iconSize / 2,
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    bottom: "22%",
-    right: 16,
-    backgroundColor: "white",
-    borderColor: Colors.dark2,
-  },
-  markerFixed: {
-    left: "44%",
-    top: Platform.OS == "ios" ? "45%" : "43%",
-    position: "absolute",
-  },
-  bottomViewContainer: {
-    backgroundColor: "white",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    borderTopRightRadius: 8,
-    borderTopLeftRadius: 8,
-  },
-  bottomViewWrapper: {
-    height: 48,
-    width: "90%",
-    marginTop: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.dark3,
-    paddingHorizontal: 12,
-  },
-});

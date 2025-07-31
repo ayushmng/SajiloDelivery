@@ -8,15 +8,15 @@ export const setupAutoSync = () => {
       const unsynced = await getSavedRequests(false);
       if (unsynced.length === 0) return;
 
-      for (const req of unsynced) {
+      for (const request of unsynced) {
         try {
-          const res = await submitRequestToApi(req);
+          const res = await submitRequestToApi(request);
           if (res.status) {
-            await markRequestAsSynced(req.id);
-            console.log("Synced request:", req.id);
+            await markRequestAsSynced(request.id);
+            console.log("Synced request:", request.id);
           }
         } catch (err) {
-          console.log("Failed to sync request:", req.id);
+          console.log("Failed to sync request:", request.id);
         }
       }
     }

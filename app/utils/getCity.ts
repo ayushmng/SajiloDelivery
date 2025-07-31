@@ -1,19 +1,23 @@
 import axios from "axios";
 
 interface CityProps {
-  fromPropertyPost?: boolean;
-  latitude: string | number;
-  longitude: string | number;
+  latitude: string;
+  longitude: string;
 }
 
 export const getCity = async ({
   latitude,
   longitude,
-  fromPropertyPost = false,
 }: CityProps): Promise<string> => {
   try {
     const response = await axios.get(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+      {
+        headers: {
+          "User-Agent": "SajiloDelivery/ayushmng.21@gmail.com",
+          "Accept-Language": "en",
+        },
+      }
     );
 
     if (response?.data?.address) {
@@ -23,16 +27,12 @@ export const getCity = async ({
         .map((part: any) => part.trim())
         .slice(0, 3)
         .join(", ");
-      return fromPropertyPost
-        ? finalAddress.trim().replace(/,\s*$/, "") +
-            " " +
-            address?.address?.county
-        : finalAddress.trim().replace(/,\s*$/, "");
+      return finalAddress.trim().replace(/,\s*$/, "");
     } else {
       throw new Error("No address found for the given coordinates");
     }
   } catch (err: any) {
-    console.error(err.message);
+    console.error("Map API Error: ", err.message);
     throw err;
   }
 };

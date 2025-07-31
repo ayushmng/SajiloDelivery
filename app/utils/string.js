@@ -11,4 +11,5 @@ export const addressEmptyMessage =
   "Pickup and drop off location can not be same";
 export const viewHistory = "Previous Delivery Requests:";
 export const noData = "Oops! no history found.";
+export const noLocationFound = "No Location Found";
 export const STORAGE_KEY = "delivery_requests";

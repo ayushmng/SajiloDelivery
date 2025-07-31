@@ -22,11 +22,11 @@ export const saveRequest = async (
   }
 };
 
-export const getSavedRequests = async (onlyUnsynced = true) => {
+export const getSavedRequests = async (unsynced = true) => {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return onlyUnsynced ? parsed.filter((r) => !r.synced) : parsed;
+    return unsynced ? parsed.filter((r) => !r.synced) : parsed;
   } catch (error) {
     console.error("Failed to fetch saved requests:", error);
     return [];

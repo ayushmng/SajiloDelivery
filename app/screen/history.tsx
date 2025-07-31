@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { splitDateTime } from "@/utils/dateSplitter";
 import { heightPercentageToDP } from "react-native-responsive-screen";
+import { goBack } from "@/navigation/rootNavigationRef";
 
 const listEmptyComponent = () => {
   return (
@@ -77,26 +78,28 @@ export default function History() {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    padding: 16,
+    padding: 8,
   },
   container: {
     paddingBottom: 32,
   },
   headingStyles: {
+    left: 8,
     marginBottom: 24,
     fontSize: size.input,
     fontFamily: fontFamily.Sans_SemiBold,
   },
   card: {
+    margin: 8,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 16,
-    marginBottom: 16,
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    overflow: "hidden",
   },
   dateTime: {
     marginBottom: 8,
