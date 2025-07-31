@@ -7,7 +7,9 @@ interface BackButtonProps {
   onPress?: () => void;
 }
 
-export const BackButton: React.FC<BackButtonProps> = ({ onPress }) => {
+export const BackButton: React.FC<BackButtonProps> = ({
+  onPress = () => goBack(),
+}) => {
   const styles = StyleSheet.create({
     backButton: { marginBottom: 24 },
   });

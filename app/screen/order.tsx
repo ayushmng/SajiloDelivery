@@ -18,6 +18,7 @@ import {
   formHeading,
   fullNamePlaceHolder,
   phoneNumber,
+  pickup,
 } from "@/utils/string";
 import { useAppStore } from "@/stores/appStore";
 import { UneditableTextField } from "@/components/textInput/UneditableTextField";
@@ -37,7 +38,6 @@ export const useBackHandler = (onBackPress: () => boolean) => {
       "hardwareBackPress",
       onBackPress
     );
-
     return () => backHandler.remove();
   }, [onBackPress]);
 };
@@ -52,7 +52,7 @@ export default function Order() {
     buttonContainer: {
       marginTop: 42,
       alignSelf: "center",
-      marginBottom: insets.bottom + 8 || 28,
+      marginBottom: insets.bottom + 8 || 32,
     },
     headingStyles: {
       fontSize: size.input,
@@ -136,21 +136,17 @@ export default function Order() {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        clearData();
-      };
-    }, [])
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS == "ios" ? "padding" : null}
-        style={[styles.container, { marginBottom: insets.bottom }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
       >
-        <ScrollView style={styles.container}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.container}
+        >
           <BackButton
             onPress={() => {
               clearData();
