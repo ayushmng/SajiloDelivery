@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const token = "TOKEN";
 export const rememberMe = "REMEMBER_ME";
-export const baseUrl = "https://rentsnepal.com/api";
 
 export const homeView = [
   {
